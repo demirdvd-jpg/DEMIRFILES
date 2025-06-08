@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<title>Dosya Yükle ve Link Oluştur</title>
+<style>
+  body { font-family: Arial; padding: 20px; background: #fafafa; }
+  input, button { padding: 10px; margin: 10px 0; width: 100%; max-width: 400px; }
+  a { display: block; margin-top: 10px; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<h2>Dosya Yükle ve Link Oluştur</h2>
+<input type="file" id="fileInput" />
+<button id="uploadBtn">Yükle ve Link Oluştur</button>
+<p id="status"></p>
+<div id="linkContainer"></div>
+
+<script>
+function generateId() {
+  return Math.random().toString(36).substr(2, 9);
+}
+
+document.getElementById('uploadBtn').onclick = () => {
+  const fileInput = document.getElementById('fileInput');
+  const status = document.getElementById('status');
+  const linkContainer = document.getElementById('linkContainer');
+
+  if(!fileInput.files.length){
+    alert("Lütfen bir dosya seçin!");
+    return;
+  }
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+
+  reader.onload = function(e){
+    const base64Data = e.target.result;
+    const id = generateId();
+
+    // LocalStorage'a kaydet
+    localStorage.setItem('file_' + id, JSON.stringify({
+      name: file.name,
+      data: base64Data
+    }));
+
+    const url = location.href.split('#')[0] + '#' + id;
+    linkContainer.innerHTML = `<a href="${url}" target="_blank">Dosyanı indir: ${url}</a>`;
+    status.textContent = "Dosya yüklendi!";
+  };
+
+  reader.readAsDataURL(file);
+};
+
+// Eğer URL'de id varsa dosyayı indir
+window.onload = () => {
+  const id = location.hash.substr(1);
+  if(!id) return;
+  const fileObjStr = localStorage.getItem('file_' + id);
+  if(!fileObjStr){
+    alert("Dosya bulunamadı!");
+    return;
+  }
+  const fileObj = JSON.parse(fileObjStr);
+
+  const a = document.createElement('a');
+  a.href = fileObj.data;
+  a.download = fileObj.name;
+  a.textContent = `Dosyayı indir: ${fileObj.name}`;
+  document.body.appendChild(a);
+};
+</script>
+
+</body>
+</html>
